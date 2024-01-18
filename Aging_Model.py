@@ -65,16 +65,22 @@ def k_Cyc_Low_T_High_SOC(T, I_Ch, SOC):
     return k_Cyc_Low_T_High_SOC_Ref * temp_term * current_term * 0.5 * sgn_SOC
 
 
-
-
 # Creating the mesh for Temperature and SOC
 temperature_celsius = np.linspace(0, 60, 101)  # Temperature range (°C)
 soc_range = np.linspace(0, 100, 101)           # SOC range
 T_mesh_celsius, SOC_mesh = np.meshgrid(temperature_celsius, soc_range)
 
+# Creating the mesh for Temperature and Current
+current_range = np.linspace(0, 1, 101)  # Current range (0C to 1C)
+T_mesh_celsius, Current_mesh = np.meshgrid(temperature_celsius, current_range)
+
 # Calculate k_Cal values for the mesh
 k_Cal_mesh_celsius = np.array([[k_Cal(T+273.15, SOC) for T, SOC in zip(t_row, SOC_mesh_row)]
                                for t_row, SOC_mesh_row in zip(T_mesh_celsius, SOC_mesh)])
+
+# Calculate k_Cyc_High_T values for the mesh
+k_Cyc_High_T_mesh = np.array([[k_Cyc_High_T(T+273.15) for T in t_row] for t_row in T_mesh_celsius])
+
 
 # Plotting the 3D surface plot
 fig = plt.figure(figsize=(10, 7))
@@ -89,5 +95,20 @@ ax.set_ylabel('State of Charge (SOC) [%]')
 ax.set_zlabel('k_Cal(T, SOC)')
 ax.set_title('3D Surface Plot of k_Cal(T, SOC)')
 
+
+# Plotting the 3D surface plot
+fig2 = plt.figure(figsize=(10, 7))
+ax2 = fig2.add_subplot(111, projection='3d')
+
+# Plotting the surface
+surf2 = ax2.plot_surface(T_mesh_celsius, Current_mesh, k_Cyc_High_T_mesh, cmap='inferno')
+
+# Adding labels and title
+ax2.set_xlabel('Temperature (°C)')
+ax2.set_ylabel('Current (C-rate)')
+ax2.set_zlabel('k_Cyc_High_T(T)')
+ax2.set_title('3D Surface Plot of k_Cyc_High_T(T)')
+
 # Show the plot
 plt.show()
+

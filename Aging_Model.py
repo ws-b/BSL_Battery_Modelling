@@ -48,7 +48,7 @@ def k_Cyc_High_T(T):
 
 # Equation 18: Temperature and current rate dependence for low temperature cycle aging
 def k_Cyc_Low_T_Current(T, I_Ch):
-    temp_term = np.exp(-Ea_Cyc_Low_T / Rg * (1 / T - 1 / T_Ref))
+    temp_term = np.exp(Ea_Cyc_Low_T / Rg * (1 / T - 1 / T_Ref))
 
     current_term = np.exp(beta_Low_T * (I_Ch - I_Ch_Ref) / C0)
     return k_Cyc_Low_T_Ref * temp_term * current_term
@@ -60,9 +60,10 @@ def k_Cyc_Low_T_High_SOC(T, I_Ch, SOC):
 
     current_term = np.exp(beta_Low_T_High_SOC * (I_Ch - I_Ch_Ref) / C0)
 
-    sgn_SOC = np.sign(SOC - SOC_Ref) + 1  # np.sign returns -1, 0, or 1
+    # SOC가 SOC_Ref 이상인 경우에만 계산 적용
+    sgn_SOC = np.where(SOC - SOC_Ref >= 0, 1, 0)
 
-    return k_Cyc_Low_T_High_SOC_Ref * temp_term * current_term * 0.5 * sgn_SOC
+    return k_Cyc_Low_T_High_SOC_Ref * temp_term * current_term * 0.5 * (sgn_SOC + 1)
 
 
 # Creating the mesh for Temperature and SOC
@@ -101,8 +102,10 @@ ax.set_ylabel('Temperature (°C)')
 ax.set_zlabel('k_Cal(T, SOC)')
 ax.set_title('3D Surface Plot of k_Cal(T, SOC)')
 
+# Show the plot
+plt.show()
 
-
+"""
 # Plotting the 3D surface plot
 fig2 = plt.figure(figsize=(10, 7))
 ax2 = fig2.add_subplot(111, projection='3d')
@@ -145,9 +148,7 @@ ax4.set_zlabel('k_Cyc_Low_T_High_SOC(T, I)')
 ax4.set_title('3D Surface Plot of k_Cyc_Low_T_High_SOC (T, I, SOC)')
 ax4.set_xlim(60, 0)  # Set the x-axis limits from 60 to 0
 
-
-
-
 # Show the plot
 plt.show()
 
+"""

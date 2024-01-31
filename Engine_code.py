@@ -2,8 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from Aging_Model import k_Cal, x_a, Ua_SOC, k_Cyc_High_T, k_Cyc_Low_T_Current, k_Cyc_Low_T_High_SOC
-from math import sqrt
-
 
 # Constants and Parameters from Table IV
 k_Cal_Ref = 3.69e-4  # h^-0.5
@@ -33,12 +31,13 @@ C0 = 3  # Ah, nominal cell capacity
 
 # Q_Loss = Q_L_cal + Q_L_cyc_high_T + Q_L_cyc_low_T + Q_L_cyc_high_T_SOC
 
-# 시간 범위 설정 (0일부터 200일까지, 하루에 24시간)
-time_range_days = np.linspace(0, 200, 200)  # 0일부터# 200일
+# 시간 범위 설정
+time_range_days = np.linspace(0, 200, 200)  # 0일부터 200일
 time_range_hours = time_range_days * 24  # 시간 단위로 변환
 
-# SOC 값 범위 설정 (0%에서 100%까지 9등분)
+# SOC 값 범위 설정
 soc_values = np.linspace(0, 100, 9)
+
 # 고정된 값 설정
 Temp = 15
 T_fixed = Temp + 273.15
@@ -51,7 +50,6 @@ tau = 2*np.sqrt(time_range_hours)
 phi_total = 2*np.sqrt(Q_total)
 phi_ch = 2*np.sqrt(Q_ch)
 
-# 각 구성 요소 계산
 # Calculate Q_L_cal for each SOC and time step
 Q_L_cal_mesh = {soc: k_Cal(T_fixed, soc) * tau for soc in soc_values}
 
@@ -59,7 +57,6 @@ Q_L_cal_mesh = {soc: k_Cal(T_fixed, soc) * tau for soc in soc_values}
 # Q_L_cyc_low_T_mesh = k_Cyc_Low_T_Current(T_fixed, Current_mesh) * np.sqrt(Q_total)
 # Q_L_cyc_high_T_SOC_mesh = k_Cyc_Low_T_High_SOC(T_fixed, Current_mesh, SOC_mesh) * Q_total
 
-# # 각 SOC 값에 대해 Q_loss 계산 및 백분율 변환
 # Q_loss_percent_soc = {soc: [(k_Cal(T_fixed, soc) * np.sqrt(t) +
 #                              k_Cyc_High_T(T_fixed) * np.sqrt(Q_total) +
 #                              k_Cyc_Low_T_Current(T_fixed, Current_fixed) * np.sqrt(Q_total) +

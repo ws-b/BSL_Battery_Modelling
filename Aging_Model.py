@@ -89,66 +89,63 @@ k_Cyc_Low_T_mesh = np.array([[k_Cyc_Low_T_Current(T+273.15, Current) for T, Curr
 k_Cyc_Low_T_High_SOC_mesh = np.array([[k_Cyc_Low_T_High_SOC(T+273.15, Current, SOC) for T, Current, SOC in zip(t_row, Current_mesh_row, SOC_mesh_row)]
                              for t_row, Current_mesh_row, SOC_mesh_row in zip(T_mesh_celsius, Current_mesh, SOC_mesh)])
 
-# Plotting the 3D surface plot
-fig = plt.figure(figsize=(10, 7))
-ax = fig.add_subplot(111, projection='3d')
+# # Plotting the 3D surface plot
+# fig = plt.figure(figsize=(10, 7))
+# ax = fig.add_subplot(111, projection='3d')
+#
+# # Plotting the surface
+# surf = ax.plot_surface(SOC_mesh, T_mesh_celsius, k_Cal_mesh_celsius, cmap='viridis')
+#
+# # Adding labels and title
+# ax.set_xlabel('State of Charge (SOC) [%]')
+# ax.set_ylabel('Temperature (°C)')
+# ax.set_zlabel('k_Cal(T, SOC)')
+# ax.set_title('3D Surface Plot of k_Cal(T, SOC)')
 
-# Plotting the surface
-surf = ax.plot_surface(SOC_mesh, T_mesh_celsius, k_Cal_mesh_celsius, cmap='viridis')
 
-# Adding labels and title
-ax.set_xlabel('State of Charge (SOC) [%]')
-ax.set_ylabel('Temperature (°C)')
-ax.set_zlabel('k_Cal(T, SOC)')
-ax.set_title('3D Surface Plot of k_Cal(T, SOC)')
 
-# Show the plot
-plt.show()
-
-"""
-# Plotting the 3D surface plot
-fig2 = plt.figure(figsize=(10, 7))
-ax2 = fig2.add_subplot(111, projection='3d')
-
-# Plotting the surface
-surf2 = ax2.plot_surface(T_mesh_celsius,Current_mesh, k_Cyc_High_T_mesh, cmap='inferno')
-
-# Adding labels and title
-ax2.set_xlabel('Temperature (°C)')
-ax2.set_ylabel('Current (C-rate)')
-ax2.set_zlabel('k_Cyc_High_T(T)')
-ax2.set_title('3D Surface Plot of k_Cyc_High_T(T)')
-
-# Plotting the 3D surface plot for k_Cyc_Low_T_Current
-fig3 = plt.figure(figsize=(10, 7))
-ax3 = fig3.add_subplot(111, projection='3d')
-
-# Plotting the surface
-surf3 = ax3.plot_surface(T_mesh_celsius, Current_mesh, k_Cyc_Low_T_mesh, cmap='viridis')
-
-# Adding labels and title
-ax3.set_xlabel('Temperature (°C)')
-ax3.set_ylabel('Current (C-rate)')
-ax3.set_zlabel('k_Cyc_Low_T(T, I)')
-ax3.set_title('3D Surface Plot of k_Cyc_Low_T_Current(T, I)')
-ax3.set_xlim(60, 0)  # Set the x-axis limits from 60 to 0
- 
-
-# Plotting the 3D surface plot for k_Cyc_Low_T_Current
-fig4 = plt.figure(figsize=(10, 7))
-ax4 = fig4.add_subplot(111, projection='3d')
-
-# Plotting the surface
-surf4 = ax4.plot_surface(T_mesh_celsius, Current_mesh, k_Cyc_Low_T_High_SOC_mesh, cmap='viridis')
-
-# Adding labels and title
-ax4.set_xlabel('Temperature (°C)')
-ax4.set_ylabel('Current (C-rate)')
-ax4.set_zlabel('k_Cyc_Low_T_High_SOC(T, I)')
-ax4.set_title('3D Surface Plot of k_Cyc_Low_T_High_SOC (T, I, SOC)')
-ax4.set_xlim(60, 0)  # Set the x-axis limits from 60 to 0
+# # Plotting the 3D surface plot
+# fig2 = plt.figure(figsize=(10, 7))
+# ax2 = fig2.add_subplot(111, projection='3d')
+#
+# # Plotting the surface
+# surf2 = ax2.plot_surface(T_mesh_celsius,Current_mesh, k_Cyc_High_T_mesh, cmap='inferno')
+#
+# # Adding labels and title
+# ax2.set_xlabel('Temperature (°C)')
+# ax2.set_ylabel('Current (C-rate)')
+# ax2.set_zlabel('k_Cyc_High_T(T)')
+# ax2.set_title('3D Surface Plot of k_Cyc_High_T(T)')
+#
+# # Plotting the 3D surface plot for k_Cyc_Low_T_Current
+# fig3 = plt.figure(figsize=(10, 7))
+# ax3 = fig3.add_subplot(111, projection='3d')
+#
+# # Plotting the surface
+# surf3 = ax3.plot_surface(T_mesh_celsius, Current_mesh, k_Cyc_Low_T_mesh, cmap='viridis')
+#
+# # Adding labels and title
+# ax3.set_xlabel('Temperature (°C)')
+# ax3.set_ylabel('Current (C-rate)')
+# ax3.set_zlabel('k_Cyc_Low_T(T, I)')
+# ax3.set_title('3D Surface Plot of k_Cyc_Low_T_Current(T, I)')
+# ax3.set_xlim(60, 0)  # Set the x-axis limits from 60 to 0
+#
+#
+# # Plotting the 3D surface plot for k_Cyc_Low_T_Current
+# fig4 = plt.figure(figsize=(10, 7))
+# ax4 = fig4.add_subplot(111, projection='3d')
+#
+# # Plotting the surface
+# surf4 = ax4.plot_surface(T_mesh_celsius, Current_mesh, k_Cyc_Low_T_High_SOC_mesh, cmap='viridis')
+#
+# # Adding labels and title
+# ax4.set_xlabel('Temperature (°C)')
+# ax4.set_ylabel('Current (C-rate)')
+# ax4.set_zlabel('k_Cyc_Low_T_High_SOC(T, I)')
+# ax4.set_title('3D Surface Plot of k_Cyc_Low_T_High_SOC (T, I, SOC)')
+# ax4.set_xlim(60, 0)  # Set the x-axis limits from 60 to 0
 
 # Show the plot
 plt.show()
 
-"""

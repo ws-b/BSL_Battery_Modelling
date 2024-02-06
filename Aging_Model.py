@@ -72,7 +72,7 @@ soc_range = np.linspace(0, 100, 101)           # SOC range
 T_mesh_celsius, SOC_mesh = np.meshgrid(temperature_celsius, soc_range)
 
 # Creating the mesh for Temperature and Current
-current_range = np.linspace(0, 1, 101)  # Current range (0C to 1C)
+current_range = np.linspace(0, 3, 101)  # Current range (0C to 1C(3A))
 T_mesh_celsius, Current_mesh = np.meshgrid(temperature_celsius, current_range)
 
 # Calculate k_Cal values for the mesh
@@ -86,8 +86,12 @@ k_Cyc_High_T_mesh = np.array([[k_Cyc_High_T(T+273.15) for T in t_row] for t_row 
 k_Cyc_Low_T_mesh = np.array([[k_Cyc_Low_T_Current(T+273.15, Current) for T, Current in zip(t_row, Current_mesh_row)]
                              for t_row, Current_mesh_row in zip(T_mesh_celsius, Current_mesh)])
 # Calculate k_Cyc_Low_T_High_SOC for the mesh
-k_Cyc_Low_T_High_SOC_mesh = np.array([[k_Cyc_Low_T_High_SOC(T+273.15, Current, SOC) for T, Current, SOC in zip(t_row, Current_mesh_row, SOC_mesh_row)]
-                             for t_row, Current_mesh_row, SOC_mesh_row in zip(T_mesh_celsius, Current_mesh, SOC_mesh)])
+# k_Cyc_Low_T_High_SOC_mesh = np.array([[k_Cyc_Low_T_High_SOC(T+273.15, Current, SOC) for T, Current, SOC in zip(t_row, Current_mesh_row, SOC_mesh_row)]
+#                              for t_row, Current_mesh_row, SOC_mesh_row in zip(T_mesh_celsius, Current_mesh, SOC_mesh)])
+# Calculate k_Cyc_Low_T_High_SOC for the mesh
+k_Cyc_Low_T_High_SOC_mesh = np.array([[k_Cyc_Low_T_High_SOC(T+273.15, Current, 90) for T, Current in zip(t_row, Current_mesh_row)]
+                             for t_row, Current_mesh_row in zip(T_mesh_celsius, Current_mesh)])
+
 
 # # Plotting the 3D surface plot
 # fig = plt.figure(figsize=(10, 7))
@@ -113,11 +117,11 @@ k_Cyc_Low_T_High_SOC_mesh = np.array([[k_Cyc_Low_T_High_SOC(T+273.15, Current, S
 #
 # # Adding labels and title
 # ax2.set_xlabel('Temperature (°C)')
-# ax2.set_ylabel('Current (C-rate)')
+# ax2.set_ylabel('Current (A)')
 # ax2.set_zlabel('k_Cyc_High_T(T)')
 # ax2.set_title('3D Surface Plot of k_Cyc_High_T(T)')
 #
-# # Plotting the 3D surface plot for k_Cyc_Low_T_Current
+# Plotting the 3D surface plot for k_Cyc_Low_T_Current
 # fig3 = plt.figure(figsize=(10, 7))
 # ax3 = fig3.add_subplot(111, projection='3d')
 #
@@ -126,13 +130,13 @@ k_Cyc_Low_T_High_SOC_mesh = np.array([[k_Cyc_Low_T_High_SOC(T+273.15, Current, S
 #
 # # Adding labels and title
 # ax3.set_xlabel('Temperature (°C)')
-# ax3.set_ylabel('Current (C-rate)')
+# ax3.set_ylabel('Current (A)')
 # ax3.set_zlabel('k_Cyc_Low_T(T, I)')
 # ax3.set_title('3D Surface Plot of k_Cyc_Low_T_Current(T, I)')
 # ax3.set_xlim(60, 0)  # Set the x-axis limits from 60 to 0
-#
-#
-# # Plotting the 3D surface plot for k_Cyc_Low_T_Current
+
+
+# # # Plotting the 3D surface plot for k_Cyc_Low_T_Current
 # fig4 = plt.figure(figsize=(10, 7))
 # ax4 = fig4.add_subplot(111, projection='3d')
 #
@@ -141,9 +145,9 @@ k_Cyc_Low_T_High_SOC_mesh = np.array([[k_Cyc_Low_T_High_SOC(T+273.15, Current, S
 #
 # # Adding labels and title
 # ax4.set_xlabel('Temperature (°C)')
-# ax4.set_ylabel('Current (C-rate)')
+# ax4.set_ylabel('Current (A)')
 # ax4.set_zlabel('k_Cyc_Low_T_High_SOC(T, I)')
-# ax4.set_title('3D Surface Plot of k_Cyc_Low_T_High_SOC (T, I, SOC)')
+# ax4.set_title('3D Surface Plot of k_Cyc_Low_T_High_SOC (T, I, SOC=100)')
 # ax4.set_xlim(60, 0)  # Set the x-axis limits from 60 to 0
 
 # Show the plot

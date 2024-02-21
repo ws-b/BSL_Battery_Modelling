@@ -16,12 +16,12 @@ beta_Low_T = 2.64  # h
 beta_Low_T_High_SOC = 7.84  # h
 SOC_Ref = 82  # 82%
 T_Ref = 298.15  # K (25°C)
-I_Ch_Ref = 3  # A
+I_Ch_Ref = 1.5  # A
 Ua_Ref = 0.123  # V (Reference potential)
 k0 = 0.142  # dimensionless
 Rg = 8.314  # J/(mol*K)
 F = 96485  # C/mol (Faraday constant)
-C0 = 3  # Ah, nominal cell capacity
+C0 = 1.5  # Ah, nominal cell capacity
 
 # Equation 9 : Temperature and SOC dependence for Calendar Aging
 def k_Cal(T_kelvin, SOC):

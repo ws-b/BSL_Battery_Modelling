@@ -24,8 +24,8 @@ F = 96485  # C/mol (Faraday constant)
 C0 = 1.5  # Ah, nominal cell capacity
 
 # Equation 9 : Temperature and SOC dependence for Calendar Aging
-def k_Cal(T_kelvin, SOC):
-    term1 = np.exp(-Ea_Cal * (1/T_kelvin - 1/T_Ref) / Rg)
+def k_Cal(T, SOC):
+    term1 = np.exp(-Ea_Cal * (1/T - 1/T_Ref) / Rg)
     term2 = np.exp(alpha * F * (Ua_Ref - Ua_SOC(x_a(SOC))) / (Rg * T_Ref))
     return k_Cal_Ref * term1 * (term2 + k0)
 
@@ -65,7 +65,7 @@ def k_Cyc_Low_T_High_SOC(T, I_Ch, SOC):
 
     return k_Cyc_Low_T_High_SOC_Ref * temp_term * current_term * 0.5 * (sgn_SOC + 1)
 
-
+"""
 # Creating the mesh for Temperature and SOC
 temperature_celsius = np.linspace(0, 60, 101)  # Temperature range (°C)
 soc_range = np.linspace(0, 100, 101)           # SOC range
@@ -153,3 +153,4 @@ k_Cyc_Low_T_High_SOC_mesh = np.array([[k_Cyc_Low_T_High_SOC(T+273.15, Current, 9
 # Show the plot
 plt.show()
 
+"""

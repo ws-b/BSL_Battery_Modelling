@@ -55,15 +55,6 @@ def k_Cyc_Low_T_Current(T, I_Ch):
 
 
 # Equation 21 : Temperature and SOC dependence for low temperature and high SOC cycling Aging
-# def k_Cyc_Low_T_High_SOC(T, I_Ch, SOC):
-#     temp_term = np.exp(Ea_Cyc_Low_T_High_SOC / Rg * (1 / T - 1 / T_Ref))
-#
-#     current_term = np.exp(beta_Low_T_High_SOC * (I_Ch - I_Ch_Ref) / C0)
-#
-#     # SOC가 SOC_Ref 이상인 경우에만 계산 적용
-#     sgn_SOC = np.where(SOC - SOC_Ref >= 0, 1, 0)
-#
-#     return k_Cyc_Low_T_High_SOC_Ref * temp_term * current_term * 0.5 * (sgn_SOC + 1)
 def k_Cyc_Low_T_High_SOC(T, I_Ch, SOC):
     temp_term = np.exp(Ea_Cyc_Low_T_High_SOC / Rg * (1 / T - 1 / T_Ref))
     current_term = np.exp(beta_Low_T_High_SOC * (I_Ch - I_Ch_Ref) / C0)

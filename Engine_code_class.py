@@ -6,7 +6,7 @@ from Aging_Model import k_Cal, k_Cyc_High_T, k_Cyc_Low_T_Current, k_Cyc_Low_T_Hi
 class CycleData:
     def __init__(self, cycle_number, initial_time=0, initial_phi_ch=0, initial_phi_total=0):
         self.cycle_number = cycle_number
-        self.cycle_losses = 0
+        self.cycle_losses = None
         self.initial_time = initial_time
         self.initial_phi_ch = initial_phi_ch
         self.initial_phi_total = initial_phi_total
@@ -43,12 +43,12 @@ class CycleData:
         self.cycle_losses = np.trapz(integrand_cyc1, x=phi_total) + np.trapz(integrand_cyc2, x=phi_ch) + np.trapz(integrand_cyc3, x=phi_ch)
 
         # Update final values for this cycle
-        self.final_time = time[-1]
-        self.final_phi_ch = phi_ch[-1]
-        self.final_phi_total = phi_total[-1]
+        self.final_time = time
+        self.final_phi_ch = phi_ch
+        self.final_phi_total = phi_total
 
 # Load data
-file_path = "/Users/wsong/Library/CloudStorage/SynologyDrive-wsong/SamsungSTF/Data/Aging_Model/CRDR.csv"
+file_path = "/Users/wsong/Library/CloudStorage/SynologyDrive-SamsungSTF/Data/Aging_Model/CRDR.csv"
 data = pd.read_csv(file_path)
 
 # Extract necessary columns and convert units
@@ -57,19 +57,19 @@ SOC = data['SOC'].values
 current = data['Current(mA)'].values / 1000  # Convert mA to A
 
 # Simulation settings
-num_cycles = 3000
+num_cycles = 30
 temperature_settings = [273.15, 298.15] # Temperatures: 0, 15, 25, 35, 45°C
-
-# Simulation loop
-cycles_data = []
-initial_time = 0
-initial_phi_ch = 0
-initial_phi_total = 0
 
 # making dictionary to store temperature losses
 temperature_losses = {temp: [] for temp in temperature_settings}
 cycle_numbers = np.arange(1, num_cycles + 1)
 temperature_calculation_times = {}
+
+data_by_temp = {
+    temp: {'times': [], 'phi_ch': [], 'phi_total': []}
+    for temp in temperature_settings
+}
+
 
 # calculate losses for each temperature
 for temp in temperature_settings:
@@ -89,10 +89,17 @@ for temp in temperature_settings:
         # 온도별 손실을 저장합니다.
         cumulative_losses.append(cycle_data.cycle_losses)
 
+        print(f"Cycle {cycle}: time = {cycle_data.final_time}, phi_ch = {cycle_data.final_phi_ch}, phi_total = {cycle_data.final_phi_total}")
+
+        # 온도별 사전에 각 사이클의 결과 추가
+        data_by_temp[temp]['times'].append(cycle_data.final_time)
+        data_by_temp[temp]['phi_ch'].append(cycle_data.final_phi_ch)
+        data_by_temp[temp]['phi_total'].append(cycle_data.final_phi_total)
+
         # 초기값을 업데이트합니다.
-        initial_time = cycle_data.final_time
-        initial_phi_ch = cycle_data.final_phi_ch
-        initial_phi_total = cycle_data.final_phi_total
+        initial_time = cycle_data.final_time[-1]
+        initial_phi_ch = cycle_data.final_phi_ch[-1]
+        initial_phi_total = cycle_data.final_phi_total[-1]
 
     # 누적 손실을 계산합니다.
     temperature_losses[temp] = np.cumsum(cumulative_losses)
@@ -105,6 +112,7 @@ for temp in temperature_settings:
 for temp, calc_time in temperature_calculation_times.items():
     print(f"Temperature {int(temp - 273.15)}°C: Calculation took {calc_time:.2f} seconds")
 
+
 # 온도별 결과를 시각화합니다.
 plt.figure(figsize=(10, 6))
 for temp, losses in temperature_losses.items():
@@ -112,9 +120,8 @@ for temp, losses in temperature_losses.items():
     plt.plot(cycle_numbers, losses, label=f'Temp = {int(temp - 273.15)}°C')
 
 plt.xlabel('Cycle Number')
-plt.ylabel('Pure Cycling Capacity Retention (%)')  # y축 라벨을 퍼센트 단위로 변경
+plt.ylabel('Pure Cycling Capacity Retention')  # y축 라벨을 퍼센트 단위로 변경
 plt.title('Cumulative Losses over Cycles by Temperature')
 plt.legend()
 plt.grid(True)
 plt.show()
-

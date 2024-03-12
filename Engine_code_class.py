@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import time as tm
 from Aging_Model import k_Cal, k_Cyc_High_T, k_Cyc_Low_T_Current, k_Cyc_Low_T_High_SOC
 class CycleData:
-    def __init__(self, cycle_number, initial_time=0, initial_phi_ch=0, initial_phi_total=0):
+    def __init__(self, cycle_number, initial_time = 0, initial_phi_ch = 0, initial_phi_total = 0):
         self.cycle_number = cycle_number
         self.cycle_losses = None
         self.initial_time = initial_time
@@ -28,7 +28,6 @@ class CycleData:
         # Calculate time intervals
         time_intervals = np.diff(time, prepend=0)
 
-        # Adjust phi_ch and phi_total by adding initial values
         phi_ch = np.cumsum(np.where(current > 0, current * time_intervals, 0)) + self.initial_phi_ch
         phi_total = np.cumsum(np.abs(current * time_intervals)) + self.initial_phi_total
 
@@ -47,6 +46,7 @@ class CycleData:
         self.final_phi_ch = phi_ch
         self.final_phi_total = phi_total
 
+        return
 # Load data
 file_path = "/Users/wsong/Library/CloudStorage/SynologyDrive-SamsungSTF/Data/Aging_Model/CRDR.csv"
 data = pd.read_csv(file_path)
@@ -57,7 +57,7 @@ SOC = data['SOC'].values
 current = data['Current(mA)'].values / 1000  # Convert mA to A
 
 # Simulation settings
-num_cycles = 30
+num_cycles = 2
 temperature_settings = [273.15, 298.15] # Temperatures: 0, 15, 25, 35, 45°C
 
 # making dictionary to store temperature losses
@@ -66,16 +66,14 @@ cycle_numbers = np.arange(1, num_cycles + 1)
 temperature_calculation_times = {}
 
 data_by_temp = {
-    temp: {'times': [], 'phi_ch': [], 'phi_total': []}
+    temp: {cycle: {'time': [], 'phi_ch': [], 'phi_total': []} for cycle in range(1, num_cycles + 1)}
     for temp in temperature_settings
 }
-
 
 # calculate losses for each temperature
 for temp in temperature_settings:
     # start time
     start_time = tm.time()
-    # initial values
     initial_time = 0
     initial_phi_ch = 0
     initial_phi_total = 0
@@ -89,12 +87,12 @@ for temp in temperature_settings:
         # 온도별 손실을 저장합니다.
         cumulative_losses.append(cycle_data.cycle_losses)
 
-        print(f"Cycle {cycle}: time = {cycle_data.final_time}, phi_ch = {cycle_data.final_phi_ch}, phi_total = {cycle_data.final_phi_total}")
+        print(f"Cycle {cycle}: time = {cycle_data.final_time[-1]}, phi_ch = {cycle_data.final_phi_ch[-1]}, phi_total = {cycle_data.final_phi_total[-1]}")
 
         # 온도별 사전에 각 사이클의 결과 추가
-        data_by_temp[temp]['times'].append(cycle_data.final_time)
-        data_by_temp[temp]['phi_ch'].append(cycle_data.final_phi_ch)
-        data_by_temp[temp]['phi_total'].append(cycle_data.final_phi_total)
+        data_by_temp[temp][cycle + 1]['time'].append(cycle_data.final_time)
+        data_by_temp[temp][cycle + 1]['phi_ch'].append(cycle_data.final_phi_ch)
+        data_by_temp[temp][cycle + 1]['phi_total'].append(cycle_data.final_phi_total)
 
         # 초기값을 업데이트합니다.
         initial_time = cycle_data.final_time[-1]

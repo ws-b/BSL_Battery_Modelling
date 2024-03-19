@@ -3,104 +3,91 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from Aging_Model import k_Cal, k_Cyc_High_T, k_Cyc_Low_T_Current, k_Cyc_Low_T_High_SOC
 
-# 데이터 로드
-file_path = r"C:\Users\WSONG\SynologyDrive\SamsungSTF\Data\Aging_Model\CRDR.csv"  # 실제 파일 경로로 변경 필요
+# Load data
+file_path = "/Users/wsong/Library/CloudStorage/SynologyDrive-wsong/SamsungSTF/Data/Aging_Model/CRDR.csv"
 data = pd.read_csv(file_path)
 
 # Extract necessary columns and convert units
-base_time = data['Time (seconds)'].values / 3600  # 초를 시간으로 변환
+time = data['Time (seconds)'].values / 3600  # Convert seconds to hours
 SOC = data['SOC'].values
 current = data['Current(mA)'].values / 1000  # Convert mA to A
-T_fixed = 298.15  # Fixed temperature in Kelvin
 
-# k_cal, k_cyc 값 미리 계산
-k_cal_values = np.array([k_Cal(T_fixed, soc) for soc in SOC])
-k_cyc_high_T_values = np.array([k_Cyc_High_T(T_fixed) for _ in SOC])
-k_cyc_low_T_values = np.array([k_Cyc_Low_T_Current(T_fixed, cur) for cur in current])
-k_cyc_low_T_high_SOC_values = np.array([k_Cyc_Low_T_High_SOC(T_fixed, cur, soc) for cur, soc in zip(current, SOC)])
-
-# Corrected function to calculate losses
-def calculate_loss(time, current, initial_phi_ch, initial_phi_total):
-    n = len(time)
-    total_losses = np.zeros(n)
-
-    phi_ch_values = np.zeros(n)
-    phi_total_values = np.zeros(n)
-
-    # 손실 계산
-    for i in range(1, n):
-        dt = time[i] - time[i - 1]
-        dQ = current[i] * dt
-        if current[i] > 0:  # 충전 시
-            initial_phi_ch += abs(dQ)
-        initial_phi_total += abs(dQ)
-
-        phi_ch_values[i] = initial_phi_ch
-        phi_total_values[i] = initial_phi_total
-
-        # 0으로 나누는 것을 방지하기 위해 안전한 분모를 계산
-        safe_denominator_cal = np.where(time[:i] > 0, 2 * np.sqrt(time[:i]), 1)
-        safe_denominator_cyc_high_T = np.where(phi_total_values[:i] > 0, 2 * np.sqrt(phi_total_values[:i]), 1)
-        safe_denominator_cyc_low_T = np.where(phi_ch_values[:i] > 0, 2 * np.sqrt(phi_ch_values[:i]), 1)
-
-        # 손실 계산
-        #calendar_loss = np.trapz(k_cal_values[:i] / safe_denominator_cal, x=time[:i])
-        cyc_high_T_loss = np.trapz(k_cyc_high_T_values[:i] / safe_denominator_cyc_high_T, x=phi_total_values[:i])
-        cyc_low_T_loss = np.trapz(k_cyc_low_T_values[:i] / safe_denominator_cyc_low_T, x=phi_total_values[:i])
-        cyc_low_T_high_SOC_loss = np.trapz(k_cyc_low_T_high_SOC_values[:i], x=phi_ch_values[:i])
-
-        # total_losses[i] = calendar_loss + cyc_high_T_loss + cyc_low_T_loss + cyc_low_T_high_SOC_loss
-        total_losses[i] = cyc_high_T_loss + cyc_low_T_loss + cyc_low_T_high_SOC_loss
-    return total_losses, time[-1], phi_ch_values[-1], phi_total_values[-1]
-
-
-# Simulation over multiple cycles
+# Simulation settings
 num_cycles = 500
-initial_phi_ch = 0
-initial_phi_total = 0
-final_time = 0
-cumulative_losses = []
+temperature_settings = [273.15, 288.15, 298.15, 308.15, 318.15] # Temperatures: 0, 15, 25, 35, 45°C
 
-for cycle in range(num_cycles):
-    time = base_time + cycle * base_time[-1]
-    results = calculate_loss(time, current, initial_phi_ch, initial_phi_total)
-    total_losses, final_time, final_phi_ch, final_phi_total = results
+# Function to calculate losses
+def calculate_loss(time, current, Temperature, initial_phi_ch, initial_phi_total):
+    # Pre-calculate k_cal, k_cyc values
+    k_cal_values = np.array([k_Cal(t, soc) for t, soc in zip(Temperature, SOC)])
+    k_cyc_high_T_values = np.array([k_Cyc_High_T(t) for t in Temperature])
+    k_cyc_low_T_values = np.array([k_Cyc_Low_T_Current(t, cur) for t, cur in zip(Temperature, current)])
+    k_cyc_low_T_high_SOC_values = np.array([k_Cyc_Low_T_High_SOC(t, cur, soc) for t, cur, soc in zip(Temperature, current, SOC)])
 
-    cumulative_loss = total_losses[-1]
-    cumulative_losses.append(cumulative_loss)
+    # Calculate time intervals with correct handling for the first interval
+    time_intervals = np.diff(time, prepend=0)
 
-    initial_phi_ch = final_phi_ch
-    initial_phi_total = final_phi_total
+    # Calculate cumulative charge (Ah) for charging (phi_ch) and total charge/discharge (phi_total)
+    phi_ch = np.cumsum(np.where(current > 0, current * time_intervals, 0) / 3600)
+    phi_total = np.cumsum(np.abs(current * time_intervals) / 3600)
 
-cumulative_losses_percent = [loss * 100 for loss in cumulative_losses]
-"""
-# 누적 손실 시각화
-plt.figure(figsize=(10, 6))
-plt.plot(range(1, num_cycles+1), cumulative_losses_percent, marker='', linestyle='-', linewidth=2)
-plt.xlabel('Cycle Number')
-plt.ylabel('Capacity Retention (%)')
-plt.title('Capacity Retention over cycles')
-plt.grid(False)
-plt.show()
-"""
-# 누적 손실 시각화
-plt.figure(figsize=(10, 6))
-plt.plot(range(1, num_cycles+1), cumulative_losses_percent, marker='', linestyle='-', linewidth=2)
+    integrand_cal = k_cal_values / np.where(time > 0, 2 * np.sqrt(time), 1)
+    integrand_cyc1 = k_cyc_high_T_values / np.where(phi_total > 0, 2 * np.sqrt(phi_total), 1)
+    integrand_cyc2 = k_cyc_low_T_values / np.where(phi_ch > 0, 2 * np.sqrt(phi_ch), 1)
+    integrand_cyc3 = k_cyc_low_T_high_SOC_values
+
+    # Calculate losses
+    calendar_loss = np.trapz(integrand_cal, x=time)
+    cyc_high_T_loss = np.trapz(integrand_cyc1, x=phi_total)
+    cyc_low_T_loss = np.trapz(integrand_cyc2, x=phi_ch)
+    cyc_low_T_high_SOC_loss = np.trapz(integrand_cyc3, x=phi_ch)
+
+    total_losses = calendar_loss + cyc_high_T_loss + cyc_low_T_loss + cyc_low_T_high_SOC_loss
+    return total_losses, integrand_cal, integrand_cyc1, integrand_cyc2, integrand_cyc3, time, phi_ch, phi_total
+
+cumulative_losses_by_temp = {}
+
+# Running simulation for each temperature setting
+for T_fixed in temperature_settings:
+    T_array = np.full_like(SOC, T_fixed)
+    initial_phi_ch = 0
+    initial_phi_total = 0
+    cumulative_losses = []
+    cycle_reached_80 = None
+
+    for cycle in range(num_cycles):
+        time = base_time + cycle * base_time[-1]
+        results = calculate_loss(time, current, T_array, initial_phi_ch, initial_phi_total)
+        total_losses, final_time, final_phi_ch, final_phi_total = results
+
+        cumulative_loss = total_losses[-1]
+        cumulative_losses.append(cumulative_loss)
+
+        # Stop the loop if capacity retention reaches 80%
+        if cumulative_loss >= 0.2 and cycle_reached_80 is None:
+            cycle_reached_80 = cycle + 1  # Store the cycle number when 80% capacity retention is first reached
+            break
+
+        initial_phi_ch = final_phi_ch
+        initial_phi_total = final_phi_total
+
+    cumulative_losses_percent = [loss * 100 for loss in cumulative_losses]
+    cumulative_losses_by_temp[T_fixed] = cumulative_losses_percent
+
+    if cycle_reached_80:
+        print(f"At {int(T_fixed - 273.15)}°C, capacity reached 80% at cycle {cycle_reached_80}.")
+    else:
+        print(f"At {int(T_fixed - 273.15)}°C, capacity retention did not reach 80% within {num_cycles} cycles.")
+
+plt.figure(figsize=(12, 8))
+
+# Plot capacity retention over cycles for different temperatures
+for T_fixed, losses in cumulative_losses_by_temp.items():
+    cycles = range(1, len(losses) + 1)
+    plt.plot(cycles, losses, marker='', linestyle='-', linewidth=2, label=f'Temperature = {int(T_fixed - 273.15)}°C')
 plt.xlabel('Cycle Number')
 plt.ylabel('Pure Cycling Capacity Retention (%)')
-plt.title('Capacity Retention over cycles')
-plt.grid(False)
+plt.title('Capacity Retention over cycles for different temperatures')
+plt.legend()
+plt.grid(True)
 plt.show()
-
-# plt.figure(figsize=(10, 6))
-# plt.plot(time_hours, calendar_losses, label='Calendar Loss')
-# plt.plot(time_hours, cyc_high_T_losses, label='Cyc High T Loss')
-# plt.plot(time_hours, cyc_low_T_losses, label='Cyc Low T Loss')
-# plt.plot(time_hours, cyc_low_T_high_SOC_losses, label='Cyc Low T High SOC Loss')
-# plt.plot(time_hours, total_losses, label='Total Loss', linewidth=2, color='black')
-# plt.xlabel('Time (hours)')
-# plt.ylabel('Loss')
-# plt.title('Battery Aging Losses Over Time')
-# plt.legend()
-# plt.grid(True)
-# plt.show()

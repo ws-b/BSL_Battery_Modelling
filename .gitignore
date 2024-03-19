@@ -1,3 +1,5 @@
 *.xml
 *.iml
 *.pyc
+.idea/BSL_Battery_Modeling.iml
+.idea/misc.xml

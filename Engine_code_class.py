@@ -62,11 +62,15 @@ SOC = data['SOC'].values
 current = data['Current(mA)'].values / 1000  # Convert mA to A
 
 # Simulation settings
-num_cycles = 50
+num_cycles = 3000
 temperature_settings = [273.15, 298.15] # Temperatures: 0, 15, 25, 35, 45°C
 
 # making dictionary to store temperature losses
 temperature_losses = {temp: [] for temp in temperature_settings}
+cycle_1_losses = {temp: [] for temp in temperature_settings}
+cycle_2_losses = {temp: [] for temp in temperature_settings}
+cycle_3_losses = {temp: [] for temp in temperature_settings}
+
 cycle_numbers = np.arange(1, num_cycles + 1)
 temperature_calculation_times = {}
 
@@ -102,11 +106,6 @@ for temp in temperature_settings:
 
         # 온도별 사전에 각 사이클의 결과 추가
         data_by_temp[temp][cycle + 1]['time'].append(cycle_data.final_time)
-        data_by_temp[temp][cycle + 1]['Q_cal'].append(cycle_data.cal_losses)
-        data_by_temp[temp][cycle + 1]['Q_cycle1'].append(cycle_data.cycle1_losses)
-        data_by_temp[temp][cycle + 1]['Q_cycle2'].append(cycle_data.cycle2_losses)
-        data_by_temp[temp][cycle + 1]['Q_cycle3'].append(cycle_data.cycle3_losses)
-        data_by_temp[temp][cycle + 1]['Q_total'].append(cycle_data.cycle_losses)
 
         # 초기값을 업데이트합니다.
         initial_time = cycle_data.final_time[-1]
@@ -115,9 +114,9 @@ for temp in temperature_settings:
 
     # 누적 손실을 계산합니다.
     temperature_losses[temp] = np.cumsum(cumulative_losses)
-    cycle1_losses[temp] = np.cumsum(cycle1_losses)
-    cycle2_losses[temp] = np.cumsum(cycle2_losses)
-    cycle3_losses[temp] = np.cumsum(cycle3_losses)
+    cycle_1_losses[temp] = np.cumsum(cycle1_losses)
+    cycle_2_losses[temp] = np.cumsum(cycle2_losses)
+    cycle_3_losses[temp] = np.cumsum(cycle3_losses)
 
     # 끝나는 시간 기록
     end_time = tm.time()  # 현재 시간(계산 완료 시간)을 기록합니다.
@@ -128,58 +127,75 @@ for temp in temperature_settings:
 for temp, calc_time in temperature_calculation_times.items():
     print(f"Temperature {int(temp - 273.15)}°C: Calculation took {calc_time:.2f} seconds")
 
-
-# # 온도별 결과를 시각화합니다.
-# plt.figure(figsize=(10, 6))
-# for temp, losses in temperature_losses.items():
-#     # 각 손실값에 100을 곱해 퍼센트 형태로 변환하여 플롯합니다.
-#     plt.plot(cycle_numbers, losses, label=f'Temp = {int(temp - 273.15)}°C')
-#
-# plt.xlabel('Cycle Number')
-# plt.ylabel('Pure Cycling Capacity Retention')  # y축 라벨을 퍼센트 단위로 변경
-# plt.title('Cumulative Losses over Cycles by Temperature')
-# plt.legend()
-# plt.grid(True)
-# plt.show()
-
-
-plt.figure(figsize=(18, 6))
+plt.figure(figsize=(12, 12))
 
 # 각 온도별로 사이클 손실 그래프를 그립니다.
 for temp in temperature_settings:
     cycle_nums = np.arange(1, num_cycles + 1)
 
     # 각 사이클별 누적 손실값
-    Q_cycle1_cumulative_losses = cycle1_losses[temp]
-    Q_cycle2_cumulative_losses = cycle2_losses[temp]
-    Q_cycle3_cumulative_losses = cycle3_losses[temp]
+    Q_cycle1_cumulative_losses = cycle_1_losses[temp]
+    Q_cycle2_cumulative_losses = cycle_2_losses[temp]
+    Q_cycle3_cumulative_losses = cycle_3_losses[temp]
+    Q_cycle_cumulative_losses = temperature_losses[temp]
 
     # Q_cycle1 손실 그래프
-    plt.subplot(1, 3, 1)
+    plt.subplot(2, 2, 1)
     plt.plot(cycle_nums, Q_cycle1_cumulative_losses, label=f'Temp = {int(temp - 273.15)}°C')
     plt.title('Q_cycle1 Cumulative Losses by Cycle')
     plt.xlabel('Cycle Number')
-    plt.ylabel('Cumulative Loss')
+    plt.ylabel('Capacity Retention')
     plt.legend()
     plt.grid(True)
 
     # Q_cycle2 손실 그래프
-    plt.subplot(1, 3, 2)
+    plt.subplot(2, 2, 2)
     plt.plot(cycle_nums, Q_cycle2_cumulative_losses, label=f'Temp = {int(temp - 273.15)}°C')
     plt.title('Q_cycle2 Cumulative Losses by Cycle')
     plt.xlabel('Cycle Number')
-    plt.ylabel('Cumulative Loss')
+    plt.ylabel('Capacity Retention')
     plt.legend()
     plt.grid(True)
 
     # Q_cycle3 손실 그래프
-    plt.subplot(1, 3, 3)
+    plt.subplot(2, 2, 3)
     plt.plot(cycle_nums, Q_cycle3_cumulative_losses, label=f'Temp = {int(temp - 273.15)}°C')
     plt.title('Q_cycle3 Cumulative Losses by Cycle')
     plt.xlabel('Cycle Number')
-    plt.ylabel('Cumulative Loss')
+    plt.ylabel('Capacity Retention')
+    plt.legend()
+    plt.grid(True)
+
+    # Q_cycle3 손실 그래프
+    plt.subplot(2, 2, 4)
+    plt.plot(cycle_nums, Q_cycle3_cumulative_losses, label=f'Temp = {int(temp - 273.15)}°C')
+    plt.title('Pure Cycling Losses')
+    plt.xlabel('Cycle Number')
+    plt.ylabel('Capacity Retention')
     plt.legend()
     plt.grid(True)
 
 plt.tight_layout()
 plt.show()
+
+# 각 온도에 대한 그래프 그리기
+for temp in temperature_settings:
+    # k 값 계산
+    k_cal_values = np.array([k_Cal(t, soc) for t, soc in zip(np.full(len(time), temp), SOC)])
+    k_cyc_high_T_values = np.array([k_Cyc_High_T(temp) for _ in time])
+    k_cyc_low_T_current_values = np.array([k_Cyc_Low_T_Current(temp, cur) for cur in current])
+    k_cyc_low_T_high_SOC_values = np.array([k_Cyc_Low_T_High_SOC(temp, cur, soc) for cur, soc in zip(current, SOC)])
+
+    # 그래프 그리기
+    plt.figure(figsize=(10, 6))
+    plt.plot(time, k_cal_values, label='k_Cal')
+    plt.plot(time, k_cyc_high_T_values, label='k_Cyc_High_T')
+    plt.plot(time, k_cyc_low_T_current_values, label='k_Cyc_Low_T_Current')
+    plt.plot(time, k_cyc_low_T_high_SOC_values, label='k_Cyc_Low_T_High_SOC')
+
+    plt.title(f'k Values Over Time at {temp - 273.15}°C')
+    plt.xlabel('Time (hours)')
+    plt.ylabel('k Values')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
